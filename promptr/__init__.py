@@ -179,7 +179,9 @@ class Base(object):
             self.__class__.__name__,
             self._name,
             self._params,
-            ", ".join(["{}={}".format(k, v) for k, v in self._kwargs.items()]),
+            ", ".join(
+                ["{}={}".format(k, v) for k, v in sorted(self._kwargs.items())]
+            ),
         )
 
 

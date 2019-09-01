@@ -58,9 +58,9 @@ def test_bad_runs(prompt):
 def test_list_children(prompt):
     lines_target = [
         '<Command exit [] help=None>',
-        "<State state1 [<Argument arg1 ['test1', 'test2']>] prompt=s1, help=None>",
+        "<State state1 [<Argument arg1 ['test1', 'test2']>] help=None, prompt=s1>",
         '  <Command exit [] help=None>',
-        "  <Command cmd [] optional_prefixes=['no'], pass_name=True, help=None>",
+        "  <Command cmd [] help=None, optional_prefixes=['no'], pass_name=True>",
         '<State state2 [] help=None>', '  <Command exit [] help=None>',
         '  <Group group [<Argument arg2 []>] help=None>'
     ]
