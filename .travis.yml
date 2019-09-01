@@ -1,0 +1,38 @@
+language: python
+matrix:
+  include:
+  - python: 2.7
+    env:
+    - TOXENV=py27
+  - python: 3.4
+    env:
+    - TOXENV=py34
+  - python: 3.5
+    env:
+    - TOXENV=py35
+  - python: 3.6
+    env:
+    - TOXENV=py36
+  - python: pypy
+    env:
+    - TOXENV=pypy
+  - python: pypy3
+    env:
+    - TOXENV=pypy3
+install:
+- pip install tox coveralls
+script:
+- tox
+after_success:
+- coveralls
+deploy:
+  provider: pypi
+  user: mattdavis90
+  distributions: sdist bdist_wheel
+  on:
+    condition: "$TOXENV == py36"
+    tags: true
+    all_branches: true
+    repo: mattdavis90/promptr
+  password:
+    secure: YqGj5rdgQsP+whkCsS14sY5nxIDYDB8GtO2gXc7d8L6PjmQb1qIHzL2ZZ/ZSTiJukjsciwfVnC1xmXtj6pAhQvC+GkEXfnHrUgy6Fd0v3xd/bLPbNT9DTELUUGmZyuYlRZxXVGTa6joA2k7ySqRATMbt6fQ3b01a9JO9ErRGz8DYx2oXRRHEBHKk9HeDac3cuN5b+Pka8uVZwJ1q8KHwkTM+QhI2cV6j0y4Nq+74cZ6zc06JeA69vXYWOQJemzEgxNxmX3UDTmeVsbSibjbH5OugwnpVUtdyeKTsA0qF9+Q6rF7AonkvcL62CcoAUnfOXmHvjIOqv1CmLRPExL9yCQLmCM/+ULwR9mcOe18JWHggSUGpuvnnBX9GQEMZHxlIJmyabOGUIs3ZmdPQpr36q/cr7g1K+6Pduki6Cm42EhIALKZQny8DYaDYPNDYK5DO0PYMrr38DbQfA1DsybebVL0j68w4tP2vRTATsta4lyyjlX9rcjQ/KH8Dma0pBKT5Q6KniBTrsAjPp1YDiYlaoFzDskfhPeeAd9U17urM3mKsKu6eGKI9XBquET9Di7l1jVLOHFe5ecaEkxr8FbO4j+ueCRG4+6twqE6GUkE8GNO3ud8EAEOL7RF1eQbZy59xcwxf/APJGSIg3ity0lFsxx1E9GbjOI8soeizXOh+i+8=
