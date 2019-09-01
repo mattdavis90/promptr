@@ -23,6 +23,18 @@ Thanks
 
 Thanks to prompt-toolkit for the underlying functionality, and the thanks to pallets for the click and flask inspiration.
 
+Contributing
+------------
+To contribute to promptr, please make sure that any new features or changes
+to existing functionality **include test coverage**.
+
+*Pull requests that add or change code without coverage will most likely be rejected.*
+
+Additionally, please format your code using `yapf <http://pypi.python.org/pypi/yapf>`_
+with ``facebook`` style prior to issuing your pull request.
+
+``yapf --style=facebook -i -r promptr setup.py``
+
 
 .. |Build| image:: https://travis-ci.org/mattdavis90/promptr.svg?branch=master
    :target: https://travis-ci.org/mattdavis90/promptr

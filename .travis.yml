@@ -1,9 +1,6 @@
 language: python
 matrix:
   include:
-  - python: 2.7
-    env:
-    - TOXENV=py27
   - python: 3.4
     env:
     - TOXENV=py34
@@ -13,9 +10,9 @@ matrix:
   - python: 3.6
     env:
     - TOXENV=py36
-  - python: pypy
+  - python: 3.7
     env:
-    - TOXENV=pypy
+    - TOXENV=py37
   - python: pypy3
     env:
     - TOXENV=pypy3
@@ -30,7 +27,7 @@ deploy:
   user: mattdavis90
   distributions: sdist bdist_wheel
   on:
-    condition: "$TOXENV == py36"
+    condition: "$TOXENV == py37"
     tags: true
     all_branches: true
     repo: mattdavis90/promptr
