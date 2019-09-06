@@ -1,6 +1,7 @@
 import inspect
 from collections import namedtuple
 from functools import wraps, partial
+from typing import List, Dict, Any
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
@@ -52,27 +53,65 @@ def _promptr_decorator(name=None, cls=None, parent=None, **kwargs):
 
 
 class PromptrError(RuntimeError):
+    """promptr base error
+    """
     pass
 
 
 class ExitState(PromptrError):
+    """promptr exit state
+
+    Raised when the user has requested to leave
+    the current state. This should be caught and
+    the current state should be popped from the stack,
+    up until the last remaining state at which point
+    the program should exit.
+    """
     pass
 
 
 class CommandNotFound(PromptrError):
-    def __init__(self, cmd, args):
+    """The promptr command wasn't found
+
+    The input from the user didn't match a known state,
+    group, or command.
+
+    Args:
+        cmd: The command that wasn't found
+        args: The arguments passed to the command
+    """
+    def __init__(self, cmd: str, args: List[str]):
         super(CommandNotFound,
               self).__init__('Command Not Found "{}"'.format(cmd))
 
 
 class AmbiguousCommand(PromptrError):
-    def __init__(self, cmd, args):
+    """The promptr command was ambiguous
+
+    The input from the user didn't matched multiple states,
+    groups, or commands and so promptr could not choose one
+    to execute.
+
+    Args:
+        cmd: The attempted command
+        args: The arguments passed to the command
+    """
+    def __init__(self, cmd: str, args: List[str]):
         super(AmbiguousCommand,
               self).__init__('Ambigous Command "{}"'.format(cmd))
 
 
 class NotEnoughArgs(PromptrError):
-    def __init__(self, cmd, params):
+    """Too few parameters passed
+
+    The input from the user didn't contain enough parameters
+    for the required number of arguments.
+
+    Args:
+        cmd: The attempted command
+        params: The required parameters
+    """
+    def __init__(self, cmd: str, params: List['Argument']):
         super(NotEnoughArgs, self).__init__(
             'Not enough args "{}" requires {}'.format(
                 cmd, [p.name for p in params]
@@ -81,17 +120,33 @@ class NotEnoughArgs(PromptrError):
 
 
 class Argument(object):
-    def __init__(self, name, **kwargs):
+    """promptr argument
+
+    Base class for promptr arguments. Used by the argument
+    decorator to add an argument to a state, group, or
+    command. Arguments require a name and can take an
+    optional function that provides completions.
+
+    Args:
+        name: The name of the argument. This will be used to
+            pass the value to the state, group, or command as
+            a kwarg
+        kwargs: A dictionary of keyword arguments.
+
+            *completions* should be either a list of strings,
+            or a generator that yields strings.
+        """
+    def __init__(self, name: str, **kwargs: Dict[str, Any]):
         self._name = name
-        self._completions = kwargs.pop("completions", [])
+        self._completions: List[str] = kwargs.pop("completions", [])
         self._kwargs = kwargs
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def completions(self):
+    def completions(self) -> List[str]:
         if callable(self._completions):
             return self._completions()
         return self._completions

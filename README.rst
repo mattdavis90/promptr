@@ -21,7 +21,7 @@ promptr can be installed from Pypi using pip::
 Thanks
 ------
 
-Thanks to prompt-toolkit for the underlying functionality, and the thanks to pallets for the click and flask inspiration.
+Thanks to prompt-toolkit for the underlying functionality, and thanks to pallets for the click and flask inspiration.
 
 Contributing
 ------------
