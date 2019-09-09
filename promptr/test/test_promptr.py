@@ -11,6 +11,10 @@ def prompt():
     def state1(arg1):
         p.set_context("arg1", arg1)
 
+    @state1.on_exit()
+    def state1_exit():
+        pass
+
     @state1.command(optional_prefixes=['no'], pass_name=True)
     def cmd(called_name):
         arg1 = p.get_context("arg1")

@@ -336,16 +336,26 @@ class Group(Base):
             return None
 
 
-def _exit_state():
-    raise ExitState()
-
-
 class State(Group):
     def __init__(self, *args, **kwargs):
         super(State, self).__init__(*args, **kwargs)
 
         self._prompt = kwargs.get("prompt", None)
-        self.command(name="exit")(_exit_state)
+        self._on_exit = None
+
+        self.command(name="exit")(self._exit_state)
+
+    def on_exit(self):
+        def wrapper(f):
+            self._on_exit = f
+            return f
+
+        return wrapper
+
+    def _exit_state(self):
+        if self._on_exit is not None:
+            self._on_exit()
+        raise ExitState()
 
     @property
     def names(self):
@@ -398,7 +408,7 @@ class Prompt:
             self._completions.update(extra_completions)
 
         self._root = Group("_root", None, [])
-        self._root.command(name="exit")(_exit_state)
+        self._root.command(name="exit")(self._exit_state)
         self._state_stack = [StackItem(self._root, {})]
         self._prompt_states = []
 
@@ -416,6 +426,9 @@ class Prompt:
         self.state = partial(_promptr_decorator, cls="State", parent=self._root)
         self.group = partial(_promptr_decorator, cls="Group", parent=self._root)
         self.list_children = self._root.list_children
+
+    def _exit_state(self):
+        raise ExitState()
 
     def argument(self, *args, **kwargs):
         def decorator(f):
