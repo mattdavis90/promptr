@@ -25,10 +25,8 @@ Thanks to prompt-toolkit for the underlying functionality, and thanks to pallets
 
 Contributing
 ------------
-To contribute to promptr, please make sure that any new features or changes
+To contribute to promptr, please try to make sure that any new features, or changes
 to existing functionality **include test coverage**.
-
-*Pull requests that add or change code without coverage will most likely be rejected.*
 
 Additionally, please format your code using `yapf <http://pypi.python.org/pypi/yapf>`_
 with ``facebook`` style prior to issuing your pull request.
