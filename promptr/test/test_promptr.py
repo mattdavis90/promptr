@@ -65,7 +65,7 @@ def test_list_children(prompt):
         '  <Group group [<Argument arg2 []>] help=None>'
     ]
     lines = []
-    prompt.list_children(p=lines.append, deep=True)
+    prompt.list_children(p=lines.append, deep=True, indent=2)
     assert lines == lines_target
 
 

@@ -1,7 +1,7 @@
 import inspect
 from collections import namedtuple
 from functools import wraps, partial
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Callable
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
@@ -133,8 +133,9 @@ class Argument(object):
             a kwarg
         kwargs: A dictionary of keyword arguments.
 
-            *completions* should be either a list of strings,
-            or a generator that yields strings.
+            *completions*
+                Either a :obj:`list` of :obj:`str`, or a generator
+                that yields :obj:`str`.
         """
     def __init__(self, name: str, **kwargs: Dict[str, Any]):
         self._name = name
@@ -143,10 +144,14 @@ class Argument(object):
 
     @property
     def name(self) -> str:
+        """Get the name of the :obj:`Argument`
+        """
         return self._name
 
     @property
     def completions(self) -> List[str]:
+        """Return a list of completions that are valid for this :obj:`Argument`
+        """
         if callable(self._completions):
             return self._completions()
         return self._completions
@@ -156,7 +161,27 @@ class Argument(object):
 
 
 class Base(object):
-    def __init__(self, name, callback, params, **kwargs):
+    """Base class for most promptr objects
+
+    Shouldn't be a need to instantiate this directly but can be sub-classed
+    to add functionality or to extend a current class. Instances of this
+    class can be passed to the decorator as the `cls` keyword in order
+    to customise th behaviour of the library.
+
+    Args:
+        name: The name that this state, group, or command will be referred by.
+            Used to derive the possible set of completions. Auto generated using
+            the functions name, but can be overriden.
+        callback: The function that the user has written and we've wrapped in
+            this class.
+        params: Any :obj:`Argument` classes that have been attached to this class.
+        kwargs: A dictionary of keyword arguments
+
+            *optional_prefixes*
+                should be a :obj:`list` of :obj:`str` that will be used as additional,
+                optional prefixes when performing command completion.
+    """
+    def __init__(self, name: str, callback: Callable, params: List[Argument], **kwargs: Dict[str, Any]):
         self._name = name
         self._callback = callback
         self._params = params
@@ -170,13 +195,34 @@ class Base(object):
 
         self._pass_name = kwargs.get('pass_name', False)
 
-    def list_children(self, p=print, deep=False, indent=0):
-        for child in self._children:
-            p("{}{}".format(" " * indent, child))
-            if deep:
-                child.list_children(p, deep, indent + 2)
+    def list_children(self, p: Callable=print, deep: bool=False, indent: int=0, curr_indent: int=0):
+        """Lists all of the child commands attached to this instance.
 
-    def call(self, cmd, line_parts):
+        Args:
+            p: The functions used for printing. *default*: print
+            deep: Continue traversing into all children.
+            indent: The amount of indentation to add at each level of depth.
+            curr_indent: The current level of indentation.
+        """
+        for child in self._children:
+            p("{}{}".format(" " * curr_indent, child))
+            if deep:
+                child.list_children(p, deep, indent, curr_indent + indent)
+
+    def call(self, cmd: str, line_parts: List[str]):
+        """Called when this class is activated by the promopt
+
+        This method calls the underlying callback after parsing any given
+        arguments. It also adds in an optional keyword argument to the
+        callback function; `called_name` is the completed form of the
+        command that user typed. This allows the callback function to
+        change it's behaviour depending on how it was called.
+
+        Args:
+            cmd: The command that user entered that has been matched to this
+                class.
+            line_parts: The rest of the user entered line as :obj:`list`
+        """
         if len(self._params) > len(line_parts):
             raise NotEnoughArgs(cmd, self._params)
 
