@@ -181,7 +181,10 @@ class Base(object):
                 should be a :obj:`list` of :obj:`str` that will be used as additional,
                 optional prefixes when performing command completion.
     """
-    def __init__(self, name: str, callback: Callable, params: List[Argument], **kwargs: Dict[str, Any]):
+    def __init__(
+        self, name: str, callback: Callable, params: List[Argument],
+        **kwargs: Dict[str, Any]
+    ):
         self._name = name
         self._callback = callback
         self._params = params
@@ -195,7 +198,13 @@ class Base(object):
 
         self._pass_name = kwargs.get('pass_name', False)
 
-    def list_children(self, p: Callable=print, deep: bool=False, indent: int=0, curr_indent: int=0):
+    def list_children(
+        self,
+        p: Callable = print,
+        deep: bool = False,
+        indent: int = 0,
+        curr_indent: int = 0
+    ):
         """Lists all of the child commands attached to this instance.
 
         Args:
