@@ -9,15 +9,16 @@ def prompt():
     @p.state(prompt="s1")
     @p.argument("arg1", completions=lambda: ['test1', 'test2'])
     def state1(arg1):
-        p.set_context("arg1", arg1)
+        pass
 
     @state1.on_exit()
     def state1_exit():
         pass
 
-    @state1.command(optional_prefixes=['no'], pass_name=True)
-    def cmd(called_name):
-        arg1 = p.get_context("arg1")
+    @state1.command(
+        optional_prefixes=['no'], pass_name=True, pass_context=['arg1']
+    )
+    def cmd(called_name, arg1):
         assert arg1 == 'test'
 
     @p.state()
@@ -64,7 +65,7 @@ def test_list_children(prompt):
         '<Command exit [] help=None>',
         "<State state1 [<Argument arg1 ['test1', 'test2']>] help=None, prompt=s1>",
         '  <Command exit [] help=None>',
-        "  <Command cmd [] help=None, optional_prefixes=['no'], pass_name=True>",
+        "  <Command cmd [] help=None, optional_prefixes=['no'], pass_context=['arg1'], pass_name=True>",
         '<State state2 [] help=None>', '  <Command exit [] help=None>',
         '  <Group group [<Argument arg2 []>] help=None>'
     ]

@@ -35,6 +35,7 @@ def _promptr_decorator(name=None, cls=None, parent=None, **kwargs):
             help = inspect.cleandoc(help)
 
         kwargs["help"] = help
+        kwargs['parent'] = parent
 
         cmd = Cls(
             name=name or f.__name__.lower().replace("_", "-"),
@@ -175,6 +176,8 @@ class Base(object):
         callback: The function that the user has written and we've wrapped in
             this class.
         params: Any :obj:`Argument` classes that have been attached to this class.
+        parent: Link to the parent class. Used for getting back to the :obj:`Prompt`
+            instance.
         kwargs: A dictionary of keyword arguments
 
             *optional_prefixes*
@@ -183,18 +186,21 @@ class Base(object):
     """
     def __init__(
         self, name: str, callback: Callable, params: List[Argument],
-        **kwargs: Dict[str, Any]
+        parent: 'Base', **kwargs: Dict[str, Any]
     ):
         self._name = name
         self._callback = callback
         self._params = params
         self._kwargs = kwargs
+        self._parent = parent
         self._children = []
         self._last_call_kwargs = {}
 
         self._names = [self._name]
         for prefix in kwargs.get('optional_prefixes', []):
             self._names.append('{} {}'.format(prefix, self._name))
+
+        self._auto_context = kwargs.get('pass_context', [])
 
         self._pass_name = kwargs.get('pass_name', False)
 
@@ -240,9 +246,26 @@ class Base(object):
         if self._pass_name:
             kwargs['called_name'] = self.get_completions(cmd)[0]
 
+        prompt = None
+        if len(self._params) > 0 or len(self._auto_context) > 0:
+            curr_cmd = self
+            while prompt is None and hasattr(curr_cmd, '_parent'):
+                curr_cmd = curr_cmd._parent
+
+                if hasattr(curr_cmd, 'set_context'):
+                    # Found top-level prompt
+                    prompt = curr_cmd
+
         ## TODO: Parse these correctly
         for param in self._params:
-            kwargs[param.name] = line_parts.pop(0)
+            param_value = line_parts.pop(0)
+            kwargs[param.name] = param_value
+            if prompt is not None:
+                prompt.set_context(param.name, param_value)
+
+        if prompt is not None:
+            for name in self._auto_context:
+                kwargs[name] = prompt.get_context(name)
 
         if self._callback is not None:
             self._callback(**kwargs)
@@ -407,7 +430,7 @@ class Prompt:
         if extra_completions is not None:
             self._completions.update(extra_completions)
 
-        self._root = Group("_root", None, [])
+        self._root = Group("_root", None, [], self)
         self._root.command(name="exit")(self._exit_state)
         self._state_stack = [StackItem(self._root, {})]
         self._prompt_states = []
