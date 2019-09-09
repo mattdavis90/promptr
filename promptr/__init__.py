@@ -1,6 +1,5 @@
 import inspect
 from collections import namedtuple
-from functools import wraps, partial
 from typing import List, Dict, Any, Callable
 
 from prompt_toolkit import PromptSession
@@ -12,7 +11,9 @@ __version__ = "0.1.0"
 def _promptr_decorator(name=None, cls=None, parent=None, **kwargs):
     def decorator(f):
         if cls is None or cls not in globals():
-            raise TypeError("Must specify a valid class")
+            raise TypeError(
+                f"Must specify a valid class. '{cls}' is not valid."
+            )
 
         Cls = globals()[cls]
 
@@ -326,10 +327,47 @@ class Group(Base):
     def __init__(self, *args, **kwargs):
         super(Group, self).__init__(*args, **kwargs)
 
-        self.command = partial(_promptr_decorator, cls="Command", parent=self)
-        self.action = partial(_promptr_decorator, cls="Action", parent=self)
-        self.group = partial(_promptr_decorator, cls="Group", parent=self)
-        self.state = partial(_promptr_decorator, cls="State", parent=self)
+    def command(self, *args, **kwargs: Dict[str, Any]):
+        """Add a command to this group
+
+        Args:
+            kwargs: Dictionary of keyword arguments
+
+                *cls*
+                    Name of the class to use to create the
+                    command *default* :obj:`Command`
+        """
+        kwargs.setdefault('cls', 'Command')
+        kwargs['parent'] = self
+        return _promptr_decorator(*args, **kwargs)
+
+    def group(self, *args, **kwargs: Dict[str, Any]):
+        """Add a group to this group
+
+        Args:
+            kwargs: Dictionary of keyword arguments
+
+                *cls*
+                    Name of the class to use to create the
+                    group *default* :obj:`Group`
+        """
+        kwargs.setdefault('cls', 'Group')
+        kwargs['parent'] = self
+        return _promptr_decorator(*args, **kwargs)
+
+    def state(self, *args, **kwargs: Dict[str, Any]):
+        """Add a state to this group
+
+        Args:
+            kwargs: Dictionary of keyword arguments
+
+                *cls*
+                    Name of the class to use to create the
+                    state *default* :obj:`State`
+        """
+        kwargs.setdefault('cls', 'State')
+        kwargs['parent'] = self
+        return _promptr_decorator(*args, **kwargs)
 
     def call_child(self, line_parts):
         if len(line_parts) > 0:
@@ -440,15 +478,49 @@ class Prompt:
         self._state_paren_l = state_paren_l
         self._state_paren_r = state_paren_r
 
-        self.command = partial(
-            _promptr_decorator, cls="Command", parent=self._root
-        )
-        self.action = partial(
-            _promptr_decorator, cls="Action", parent=self._root
-        )
-        self.state = partial(_promptr_decorator, cls="State", parent=self._root)
-        self.group = partial(_promptr_decorator, cls="Group", parent=self._root)
         self.list_children = self._root.list_children
+
+    def command(self, *args, **kwargs: Dict[str, Any]):
+        """Add a command to this promptr instance
+
+        Args:
+            kwargs: Dictionary of keyword arguments
+
+                *cls*
+                    Name of the class to use to create the
+                    command *default* :obj:`Command`
+        """
+        kwargs.setdefault('cls', 'Command')
+        kwargs['parent'] = self._root
+        return _promptr_decorator(*args, **kwargs)
+
+    def group(self, *args, **kwargs: Dict[str, Any]):
+        """Add a group to this promptr instance
+
+        Args:
+            kwargs: Dictionary of keyword arguments
+
+                *cls*
+                    Name of the class to use to create the
+                    group *default* :obj:`Group`
+        """
+        kwargs.setdefault('cls', 'Group')
+        kwargs['parent'] = self._root
+        return _promptr_decorator(*args, **kwargs)
+
+    def state(self, *args, **kwargs: Dict[str, Any]):
+        """Add a state to this promptr instance
+
+        Args:
+            kwargs: Dictionary of keyword arguments
+
+                *cls*
+                    Name of the class to use to create the
+                    state *default* :obj:`State`
+        """
+        kwargs.setdefault('cls', 'State')
+        kwargs['parent'] = self._root
+        return _promptr_decorator(*args, **kwargs)
 
     def _exit_state(self):
         raise ExitState()
