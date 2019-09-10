@@ -89,7 +89,6 @@ def test_list_children(prompt):
     ]
     lines = []
     prompt.list_children(p=lines.append, deep=True, indent=2)
-    print(lines)
     assert lines == lines_target
 
 

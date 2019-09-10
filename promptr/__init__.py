@@ -1,6 +1,6 @@
 import inspect
 from collections import namedtuple
-from typing import List, Dict, Any, Callable
+from typing import List, Dict, Any, Callable, Iterator, Tuple
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
@@ -274,33 +274,62 @@ class Base(object):
         self._last_call_kwargs = kwargs
 
     @property
-    def names(self):
+    def names(self) -> List[str]:
+        """Get the names that this command can be called by"""
         return self._names
 
-    def completions(self, cmd):
+    @property
+    def hasParams(self) -> bool:
+        return len(self._params) > 0
+
+    def completions(self, cmd: str) -> Iterator[str]:
+        """Get all matching completions
+
+        Generator that yields :obj:`str` when the `cmd` matches one of
+        this command's `names`.
+
+        Args:
+            cmd: The command to match against
+        """
         for name in self.names:
             if name.startswith(cmd):
                 yield name
 
-    def get_completions(self, cmd):
+    def get_completions(self, cmd: str) -> List[Tuple[str, bool]]:
+        """Get all matching completions
+
+        Returns a list of matches and whether they are exact or not.
+
+        Args:
+            cmd: The command to match against
+        """
         return [(name, name == cmd) for name in self.completions(cmd)]
 
     def child_completions(self, line_parts, last_word):
+        """
+
+        """
         state = self
         child_complete = True
 
-        for word in line_parts:
-            for child in state._children:
-                for name in child.completions(word):
-                    if name == word:
+        if len(line_parts) > 1:
+            for word in line_parts:
+                if word == '':
+                    continue
+                for child in state._children:
+                    completions = child.get_completions(word)
+                    exact_found = any([c[1] for c in completions])
+
+                    if exact_found or len(completions) == 1:
                         state = child
-                        if type(state) != Group:
+                        if state.hasParams:
                             child_complete = False
 
-        for param in state._params:
-            for completion in param.completions:
-                if completion.startswith(last_word):
-                    yield completion
+        if not child_complete:
+            for param in state._params:
+                for completion in param.completions:
+                    if completion.startswith(last_word):
+                        yield completion
 
         if child_complete:
             for child in state._children:
