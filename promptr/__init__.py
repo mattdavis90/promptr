@@ -245,7 +245,7 @@ class Base(object):
         kwargs = {}
 
         if self._pass_name:
-            kwargs['called_name'] = self.get_completions(cmd)[0]
+            kwargs['called_name'] = self.get_completions(cmd)[0][0]
 
         prompt = None
         if len(self._params) > 0 or len(self._auto_context) > 0:
@@ -283,7 +283,7 @@ class Base(object):
                 yield name
 
     def get_completions(self, cmd):
-        return list(self.completions(cmd))
+        return [(name, name == cmd) for name in self.completions(cmd)]
 
     def child_completions(self, line_parts, last_word):
         state = self
@@ -376,17 +376,26 @@ class Group(Base):
             if cmd == "":
                 return None
 
-            possible = [
-                child for child in self._children
-                if len(child.get_completions(cmd)) == 1
-            ]
+            possible = []
+            exact_matches = []
+            for child in self._children:
+                for completion, exact in child.get_completions(cmd):
+                    if exact:
+                        exact_matches.append(child)
+                    else:
+                        possible.append(child)
 
-            if len(possible) > 1:
+            if len(exact_matches) > 1:
                 raise AmbiguousCommand(cmd, line_parts)
-            elif len(possible) == 0:
+            elif len(exact_matches) == 1:
+                child = exact_matches[0]
+            elif len(possible) > 1:
+                raise AmbiguousCommand(cmd, line_parts)
+            elif len(possible) == 1:
+                child = possible[0]
+            else:
                 raise CommandNotFound(cmd, line_parts)
 
-            child = possible[0]
             child.call(cmd, line_parts)
 
             if isinstance(child, State):

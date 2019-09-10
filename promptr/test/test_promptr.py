@@ -50,7 +50,7 @@ def test_run(prompt):
         """cmd1
         group1
         state1 test
-        cmd2
+        cmd
         exit
         state2
         group2 test
