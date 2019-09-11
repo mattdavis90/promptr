@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.0 - Auto Context
+--------------------
+- **Added:** Automatic context handling for arguments
+- **Added:** on_exit handler for states
+- **Fixed:** AmbiguousCommand incorrectly thrown in some circumstances
+
 0.1.0 - Initial Release
 -----------------------
 - **Added:** Ability to create a prompt, commands, groups, and states

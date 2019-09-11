@@ -6,14 +6,27 @@ import pytest
 def prompt():
     p = Prompt(prompt_fmt="{state}#")
 
+    @p.command()
+    def cmd1():
+        pass
+
+    @p.group()
+    def group1():
+        pass
+
     @p.state(prompt="s1")
     @p.argument("arg1", completions=lambda: ['test1', 'test2'])
     def state1(arg1):
-        p.set_context("arg1", arg1)
+        pass
 
-    @state1.command(optional_prefixes=['no'], pass_name=True)
-    def cmd(called_name):
-        arg1 = p.get_context("arg1")
+    @state1.on_exit()
+    def state1_exit():
+        pass
+
+    @state1.command(
+        optional_prefixes=['no'], pass_name=True, pass_context=['arg1']
+    )
+    def cmd2(called_name, arg1):
         assert arg1 == 'test'
 
     @p.state()
@@ -22,19 +35,27 @@ def prompt():
 
     @p.argument("arg2")
     @state2.group()
-    def group(arg2):
+    def group2(arg2):
         p.set_context("arg2", arg2)
+
+    @state2.state()
+    def state3():
+        pass
 
     return p
 
 
 def test_run(prompt):
     prompt.run_text(
-        """state1 test
+        """cmd1
+        group1
+        state1 test
         cmd
         exit
         state2
-        group test
+        group2 test
+        state3
+        exit
         exit
         """,
         prompt_fmt="{state}#"
@@ -57,15 +78,17 @@ def test_bad_runs(prompt):
 
 def test_list_children(prompt):
     lines_target = [
-        '<Command exit [] help=None>',
+        '<Command exit [] help=None>', '<Command cmd1 [] help=None>',
+        '<Group group1 [] help=None>',
         "<State state1 [<Argument arg1 ['test1', 'test2']>] help=None, prompt=s1>",
         '  <Command exit [] help=None>',
-        "  <Command cmd [] help=None, optional_prefixes=['no'], pass_name=True>",
+        "  <Command cmd2 [] help=None, optional_prefixes=['no'], pass_context=['arg1'], pass_name=True>",
         '<State state2 [] help=None>', '  <Command exit [] help=None>',
-        '  <Group group [<Argument arg2 []>] help=None>'
+        '  <Group group2 [<Argument arg2 []>] help=None>',
+        '  <State state3 [] help=None>', '    <Command exit [] help=None>'
     ]
     lines = []
-    prompt.list_children(p=lines.append, deep=True)
+    prompt.list_children(p=lines.append, deep=True, indent=2)
     assert lines == lines_target
 
 
