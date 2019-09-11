@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Callable, Iterator, Tuple
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 def _promptr_decorator(name=None, cls=None, parent=None, **kwargs):
